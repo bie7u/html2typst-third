@@ -306,30 +306,30 @@ class TypstRenderer:
     def render_strong(self, node: HTMLNode, quill_styles: Dict, inline_styles: Dict) -> str:
         """Render bold text."""
         content = self.render_children(node)
-        if not content:
-            return ''
+        if not content or not content.strip():
+            return content  # Return whitespace as-is, don't wrap empty/whitespace-only content
         return f"*{content}*"
     
     def render_em(self, node: HTMLNode, quill_styles: Dict, inline_styles: Dict) -> str:
         """Render italic text."""
         content = self.render_children(node)
-        if not content:
-            return ''
+        if not content or not content.strip():
+            return content  # Return whitespace as-is, don't wrap empty/whitespace-only content
         return f"_{content}_"
     
     def render_underline(self, node: HTMLNode, quill_styles: Dict, inline_styles: Dict) -> str:
         """Render underlined text."""
         content = self.render_children(node)
-        if not content:
-            return ''
+        if not content or not content.strip():
+            return content  # Return whitespace as-is, don't wrap empty/whitespace-only content
         # Typst uses #underline() function
         return f"#underline[{content}]"
     
     def render_strikethrough(self, node: HTMLNode, quill_styles: Dict, inline_styles: Dict) -> str:
         """Render strikethrough text."""
         content = self.render_children(node)
-        if not content:
-            return ''
+        if not content or not content.strip():
+            return content  # Return whitespace as-is, don't wrap empty/whitespace-only content
         # Typst uses #strike() function
         return f"#strike[{content}]"
     

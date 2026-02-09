@@ -40,6 +40,10 @@ env/
 # Logs
 *.log
 
+# Test outputs
+test_*.typ
+test_output.typ
+
 # Testing
 .coverage
 .pytest_cache/
