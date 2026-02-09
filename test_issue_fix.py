@@ -1,10 +1,18 @@
 """
-Test the error case from the issue
+Test for the specific issue: "unexpected end of block comment" error
+This validates that the fix prevents the error from occurring.
 """
 
+import unittest
 from html2typst import translate_html_to_typst
 
-html = """<p style="text-align: center;"><strong style="color: black;">UCdsfsaf7</strong><span
+
+class TestBlockCommentIssue(unittest.TestCase):
+    """Test the fix for the block comment issue."""
+    
+    def test_original_problematic_html(self):
+        """Test with the exact HTML that caused the issue."""
+        html = """<p style="text-align: center;"><strong style="color: black;">UCdsfsaf7</strong><span
         style="color: black;">/</span><strong style="color: black;">fdsaf</strong></p>
 <p style="text-align: center;"><span style="color: black;">&nbsp;</span></p>
 <p style="text-align: center;"><span style="color: black;">Właścidfsafsafawie </span></p>
@@ -64,15 +72,59 @@ html = """<p style="text-align: center;"><strong style="color: black;">UCdsfsaf7
         style="color: black;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><strong
         style="color: black;">Zarząfdsafdsaaniowej</strong></p>
 <p><strong style="color: black;">&nbsp;</strong></p>"""
+        
+        # Should not raise an exception
+        result = translate_html_to_typst(html)
+        
+        # Should not contain the problematic "* *" pattern that Typst interprets as "/*"
+        self.assertNotIn("* *", result)
+        
+        # Should contain the important text content
+        self.assertIn("UCdsfsaf7", result)
+        self.assertIn("§ 1", result)
+        self.assertIn("§ 2", result)
+        self.assertIn("§3", result)
+        self.assertIn("§4", result)
+        self.assertIn("Za", result)
+        self.assertIn("Przeciw", result)
+        self.assertIn("Łącznie", result)
+    
+    def test_bold_with_nbsp_inline(self):
+        """Test inline bold with &nbsp; doesn't create block comment."""
+        html = '<p>Text before <strong>&nbsp;</strong> text after</p>'
+        result = translate_html_to_typst(html)
+        
+        # Should not contain "* *"
+        self.assertNotIn("* *", result)
+        
+        # Should contain the actual text
+        self.assertIn("Text before", result)
+        self.assertIn("text after", result)
+    
+    def test_bold_with_regular_space(self):
+        """Test bold with regular space."""
+        html = '<p><strong> </strong></p>'
+        result = translate_html_to_typst(html)
+        
+        # Should not contain "* *"
+        self.assertNotIn("* *", result)
+    
+    def test_mixed_whitespace_formatting(self):
+        """Test various whitespace formatting combinations."""
+        html = '''
+        <p><strong>&nbsp;</strong></p>
+        <p><em> </em></p>
+        <p><u>&nbsp;</u></p>
+        <p><s> </s></p>
+        '''
+        result = translate_html_to_typst(html)
+        
+        # None of these should create problematic patterns
+        self.assertNotIn("* *", result)
+        self.assertNotIn("_ _", result)
+        self.assertNotIn("#underline[ ]", result)
+        self.assertNotIn("#strike[ ]", result)
 
-print("Testing HTML conversion...")
-try:
-    result = translate_html_to_typst(html, debug=True, debug_log_path="/tmp/debug.log")
-    print("SUCCESS! Output:")
-    print(result)
-    print("\n" + "="*50)
-    print("Check /tmp/debug.log for details")
-except Exception as e:
-    print(f"ERROR: {e}")
-    import traceback
-    traceback.print_exc()
+
+if __name__ == '__main__':
+    unittest.main()

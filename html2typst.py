@@ -308,6 +308,10 @@ class TypstRenderer:
         content = self.render_children(node)
         if not content:
             return ''
+        # If content is only whitespace, return it without bold markers
+        # to avoid creating "* *" which Typst interprets as "/*" (block comment start)
+        if content.strip() == '':
+            return content
         return f"*{content}*"
     
     def render_em(self, node: HTMLNode, quill_styles: Dict, inline_styles: Dict) -> str:
@@ -315,6 +319,10 @@ class TypstRenderer:
         content = self.render_children(node)
         if not content:
             return ''
+        # If content is only whitespace, return it without italic markers
+        # to avoid similar issues with delimiter interpretation
+        if content.strip() == '':
+            return content
         return f"_{content}_"
     
     def render_underline(self, node: HTMLNode, quill_styles: Dict, inline_styles: Dict) -> str:
@@ -322,6 +330,10 @@ class TypstRenderer:
         content = self.render_children(node)
         if not content:
             return ''
+        # If content is only whitespace, return it without underline
+        # to keep output clean
+        if content.strip() == '':
+            return content
         # Typst uses #underline() function
         return f"#underline[{content}]"
     
@@ -330,6 +342,10 @@ class TypstRenderer:
         content = self.render_children(node)
         if not content:
             return ''
+        # If content is only whitespace, return it without strikethrough
+        # to keep output clean
+        if content.strip() == '':
+            return content
         # Typst uses #strike() function
         return f"#strike[{content}]"
     
