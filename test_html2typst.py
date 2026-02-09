@@ -147,6 +147,50 @@ class TestEdgeCases(unittest.TestCase):
         result = translate_html_to_typst(html)
         self.assertIn("Text", result)
     
+    def test_whitespace_only_strong(self):
+        """Test strong tags with only whitespace don't create invalid syntax."""
+        html = "<p><strong>&nbsp;</strong>Text</p>"
+        result = translate_html_to_typst(html)
+        # Should not contain "* *" which would be interpreted as block comment
+        self.assertNotIn("* *", result)
+        self.assertIn("Text", result)
+    
+    def test_whitespace_only_em(self):
+        """Test em tags with only whitespace don't create invalid syntax."""
+        html = "<p><em> </em>Text</p>"
+        result = translate_html_to_typst(html)
+        # Should not contain "_ _" 
+        self.assertNotIn("_ _", result)
+        self.assertIn("Text", result)
+    
+    def test_whitespace_only_underline(self):
+        """Test underline tags with only whitespace don't create invalid syntax."""
+        html = "<p><u>&nbsp;</u>Text</p>"
+        result = translate_html_to_typst(html)
+        # Should not wrap whitespace in underline
+        self.assertNotIn("#underline[ ]", result)
+        self.assertIn("Text", result)
+    
+    def test_whitespace_only_strikethrough(self):
+        """Test strikethrough tags with only whitespace don't create invalid syntax."""
+        html = "<p><s> </s>Text</p>"
+        result = translate_html_to_typst(html)
+        # Should not wrap whitespace in strike
+        self.assertNotIn("#strike[ ]", result)
+        self.assertIn("Text", result)
+    
+    def test_issue_block_comment_error(self):
+        """Test the specific HTML that caused 'unexpected end of block comment' error."""
+        # This is a minimal reproduction of the reported issue
+        html = '''<p style="text-align: justify;"><strong style="color: black;">&nbsp;</strong></p>
+        <p style="text-align: center;"><strong style="color: black;">§ 1</strong></p>'''
+        result = translate_html_to_typst(html)
+        
+        # Should not contain "* *" which causes block comment error
+        self.assertNotIn("* *", result)
+        # Should contain the actual content
+        self.assertIn("§ 1", result)
+    
     def test_unknown_tag(self):
         """Test unknown tags degrade gracefully."""
         html = "<p><custom>Unknown tag content</custom></p>"
