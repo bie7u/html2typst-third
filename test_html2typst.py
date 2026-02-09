@@ -132,8 +132,8 @@ class TestEdgeCases(unittest.TestCase):
         self.assertIn("Tekst", result)
         # Should have bold formatting
         self.assertIn("*Tekst*", result)
-        # Should be a list item
-        self.assertTrue("- *Tekst*" in result or "+ *Tekst*" in result)
+        # Should be a list item - when <li> has no parent list, defaults to unordered
+        self.assertIn("- *Tekst*", result)
     
     def test_nested_formatting(self):
         """Test nested formatting tags."""

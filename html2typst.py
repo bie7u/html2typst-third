@@ -73,12 +73,16 @@ class QuillStyleParser:
         for cls in classes:
             # Handle indent: ql-indent-1, ql-indent-2, etc.
             if cls.startswith('ql-indent-'):
-                try:
-                    indent_level = int(cls.replace('ql-indent-', ''))
-                    result['indent'] = indent_level
-                    context.log(f"Parsed indent class: {cls} -> level {indent_level}", 'debug')
-                except ValueError:
-                    context.log(f"Invalid indent class: {cls}", 'warning')
+                indent_str = cls.replace('ql-indent-', '')
+                if indent_str and indent_str.isdigit():
+                    try:
+                        indent_level = int(indent_str)
+                        result['indent'] = indent_level
+                        context.log(f"Parsed indent class: {cls} -> level {indent_level}", 'debug')
+                    except ValueError:
+                        context.log(f"Invalid indent class: {cls}", 'warning')
+                else:
+                    context.log(f"Invalid indent class format: {cls}", 'warning')
             
             # Handle alignment: ql-align-center, ql-align-right, ql-align-justify
             elif cls.startswith('ql-align-'):
@@ -432,7 +436,16 @@ class TypstRenderer:
     def render_heading(self, node: HTMLNode, quill_styles: Dict, inline_styles: Dict) -> str:
         """Render heading."""
         content = self.render_children(node)
-        level = int(node.tag[1])  # h1 -> 1, h2 -> 2, etc.
+        
+        # Validate tag format and extract level
+        tag = node.tag.lower()
+        if len(tag) == 2 and tag[0] == 'h' and tag[1].isdigit():
+            level = int(tag[1])
+            level = max(1, min(level, 6))  # Clamp to 1-6
+        else:
+            # Fallback for unexpected format
+            self.context.log(f"Unexpected heading tag format: {tag}, using h1", 'warning')
+            level = 1
         
         # Typst headings use = for h1, == for h2, etc.
         heading_marker = '=' * level
