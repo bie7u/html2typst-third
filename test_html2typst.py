@@ -141,7 +141,9 @@ class TestEdgeCases(unittest.TestCase):
         result = translate_html_to_typst(html)
         # Should not contain "* *" which would be interpreted as "/*" (block comment)
         self.assertNotIn("* *", result)
-        # Result may be empty after paragraph processing, which is fine
+        # Note: Paragraph with only whitespace gets normalized to empty string after
+        # the render_paragraph() processes content and the final .strip() is applied.
+        # This is expected and safe behavior.
     
     def test_whitespace_only_italic(self):
         """Test that whitespace-only italic doesn't create '_ _' pattern."""
@@ -149,7 +151,7 @@ class TestEdgeCases(unittest.TestCase):
         result = translate_html_to_typst(html)
         # Should not contain "_ _"
         self.assertNotIn("_ _", result)
-        # Result may be empty after paragraph processing, which is fine
+        # Note: Paragraph with only whitespace gets normalized to empty string.
     
     def test_whitespace_only_underline(self):
         """Test that whitespace-only underline is handled gracefully."""
@@ -157,7 +159,7 @@ class TestEdgeCases(unittest.TestCase):
         result = translate_html_to_typst(html)
         # Should not contain #underline with only whitespace
         self.assertNotIn("#underline[ ]", result)
-        # Result may be empty after paragraph processing, which is fine
+        # Note: Paragraph with only whitespace gets normalized to empty string.
     
     def test_whitespace_only_strikethrough(self):
         """Test that whitespace-only strikethrough is handled gracefully."""
@@ -165,7 +167,7 @@ class TestEdgeCases(unittest.TestCase):
         result = translate_html_to_typst(html)
         # Should not contain #strike with only whitespace
         self.assertNotIn("#strike[ ]", result)
-        # Result may be empty after paragraph processing, which is fine
+        # Note: Paragraph with only whitespace gets normalized to empty string.
     
     def test_multiple_whitespace_only_bold(self):
         """Test multiple whitespace-only bold tags."""

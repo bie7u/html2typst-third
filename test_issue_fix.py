@@ -122,8 +122,12 @@ class TestBlockCommentIssue(unittest.TestCase):
         # None of these should create problematic patterns
         self.assertNotIn("* *", result)
         self.assertNotIn("_ _", result)
+        # When whitespace-only, underline and strike should return plain whitespace
+        # which then gets normalized away by paragraph processing, resulting in clean output
         self.assertNotIn("#underline[ ]", result)
         self.assertNotIn("#strike[ ]", result)
+        # Result should be empty or minimal after normalization
+        self.assertTrue(len(result) < 10, "Result should be minimal after whitespace normalization")
 
 
 if __name__ == '__main__':
