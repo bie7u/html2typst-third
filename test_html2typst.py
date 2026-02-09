@@ -135,6 +135,49 @@ class TestEdgeCases(unittest.TestCase):
         # Should be a list item - when <li> has no parent list, defaults to unordered
         self.assertIn("- *Tekst*", result)
     
+    def test_whitespace_only_bold(self):
+        """Test that whitespace-only bold doesn't create '* *' pattern."""
+        html = '<p><strong>&nbsp;</strong></p>'
+        result = translate_html_to_typst(html)
+        # Should not contain "* *" which would be interpreted as "/*" (block comment)
+        self.assertNotIn("* *", result)
+        # Note: Paragraph with only whitespace gets normalized to empty string after
+        # the render_paragraph() processes content and the final .strip() is applied.
+        # This is expected and safe behavior.
+    
+    def test_whitespace_only_italic(self):
+        """Test that whitespace-only italic doesn't create '_ _' pattern."""
+        html = '<p><em>&nbsp;</em></p>'
+        result = translate_html_to_typst(html)
+        # Should not contain "_ _"
+        self.assertNotIn("_ _", result)
+        # Note: Paragraph with only whitespace gets normalized to empty string.
+    
+    def test_whitespace_only_underline(self):
+        """Test that whitespace-only underline is handled gracefully."""
+        html = '<p><u>&nbsp;</u></p>'
+        result = translate_html_to_typst(html)
+        # Should not contain #underline with only whitespace
+        self.assertNotIn("#underline[ ]", result)
+        # Note: Paragraph with only whitespace gets normalized to empty string.
+    
+    def test_whitespace_only_strikethrough(self):
+        """Test that whitespace-only strikethrough is handled gracefully."""
+        html = '<p><s>&nbsp;</s></p>'
+        result = translate_html_to_typst(html)
+        # Should not contain #strike with only whitespace
+        self.assertNotIn("#strike[ ]", result)
+        # Note: Paragraph with only whitespace gets normalized to empty string.
+    
+    def test_multiple_whitespace_only_bold(self):
+        """Test multiple whitespace-only bold tags."""
+        html = '<p><strong>&nbsp;</strong> text <strong> </strong></p>'
+        result = translate_html_to_typst(html)
+        # Should not contain "* *"
+        self.assertNotIn("* *", result)
+        # Should contain the text
+        self.assertIn("text", result)
+    
     def test_nested_formatting(self):
         """Test nested formatting tags."""
         html = "<p><strong><em>Bold and italic</em></strong></p>"
