@@ -28,7 +28,7 @@ from html2typst import translate_html_to_typst
 # Basic usage
 html = "<p>Hello <strong>World</strong>!</p>"
 typst = translate_html_to_typst(html)
-print(typst)  # Hello *World*!
+print(typst)  # Hello #strong[World]!
 
 # With debug logging
 typst = translate_html_to_typst(
@@ -69,8 +69,8 @@ Converts HTML string to Typst format.
 ## Supported HTML Elements
 
 ### Text Formatting
-- `<strong>`, `<b>` → `*bold*`
-- `<em>`, `<i>` → `_italic_`
+- `<strong>`, `<b>` → `#strong[bold]`
+- `<em>`, `<i>` → `#emph[italic]`
 - `<u>` → `#underline[text]`
 - `<s>`, `<strike>`, `<del>` → `#strike[text]`
 
@@ -128,7 +128,7 @@ Output:
 ```typst
 = My Document
 
-This is *important* text.
+This is #strong[important] text.
 
 - First item
 - Second item
@@ -179,8 +179,10 @@ html = '''
 '''
 
 typst = translate_html_to_typst(html)
-# Output: - *Text*
+# Output: - #strong[Text]
 ```
+
+The function-based syntax (`#strong[]`, `#emph[]`) is used instead of markdown-style delimiters (`*`, `_`) to avoid creating Typst block comment patterns when adjacent formatting elements appear next to slashes or asterisks.
 
 ## Design Principles
 
