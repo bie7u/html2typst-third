@@ -197,6 +197,27 @@ class TypstRenderer:
     def __init__(self, context: RenderContext):
         self.context = context
     
+    @staticmethod
+    def fix_syntax_ambiguities(text: str) -> str:
+        """
+        Fix patterns in Typst output that could be misinterpreted.
+        
+        Specifically handles:
+        - #command[...](  -> #command[...] (  (prevents interpretation as function call)
+        - #command[...]#  -> #command[...] # (adds space between adjacent commands)
+        """
+        import re
+        
+        # Pattern 1: After ] followed immediately by ( [ or {
+        # This prevents #strong[text]( from being interpreted as a function call
+        text = re.sub(r'\]([(\[{])', r'] \1', text)
+        
+        # Pattern 2: After ] followed immediately by #
+        # This prevents adjacent commands from running together
+        text = re.sub(r'\](#)', r'] #', text)
+        
+        return text
+    
     def render(self, node) -> str:
         """Main render method."""
         if isinstance(node, TextNode):
@@ -209,10 +230,15 @@ class TypstRenderer:
         """Render text node with proper escaping for Typst."""
         text = node.text
         
-        # Escape special Typst characters
-        # We need to be careful with *, _, `, #, @, etc.
-        # For now, basic escaping - text content should generally be safe
-        # unless it contains Typst special sequences
+        # Escape special Typst characters that could cause syntax errors
+        # Escape backslash first to avoid double-escaping
+        text = text.replace('\\', '\\\\')
+        # Escape other special characters that have meaning in Typst
+        text = text.replace('#', '\\#')
+        text = text.replace('$', '\\$')
+        text = text.replace('@', '\\@')
+        # Note: We don't escape [], (), {}, etc. as they're common in normal text
+        # and only problematic in specific contexts which we handle separately
         
         return text
     
@@ -259,6 +285,8 @@ class TypstRenderer:
             's': self.render_strikethrough,
             'strike': self.render_strikethrough,
             'del': self.render_strikethrough,
+            'sup': self.render_sup,
+            'sub': self.render_sub,
         }
         
         handler = handler_map.get(tag, self.render_generic)
@@ -336,6 +364,22 @@ class TypstRenderer:
             return ''
         # Typst uses #strike() function
         return f"#strike[{content}]"
+    
+    def render_sup(self, node: HTMLNode, quill_styles: Dict, inline_styles: Dict) -> str:
+        """Render superscript text."""
+        content = self.render_children(node)
+        if not content:
+            return ''
+        # Typst uses #super() function for superscript
+        return f"#super[{content}]"
+    
+    def render_sub(self, node: HTMLNode, quill_styles: Dict, inline_styles: Dict) -> str:
+        """Render subscript text."""
+        content = self.render_children(node)
+        if not content:
+            return ''
+        # Typst uses #sub() function for subscript
+        return f"#sub[{content}]"
     
     def render_ul(self, node: HTMLNode, quill_styles: Dict, inline_styles: Dict) -> str:
         """Render unordered list."""
@@ -552,6 +596,9 @@ def translate_html_to_typst(
         if debug:
             context.log(f"Rendering error: {str(e)}", 'error')
         typst_output = ""
+    
+    # Fix syntax ambiguities that could cause Typst compilation errors
+    typst_output = TypstRenderer.fix_syntax_ambiguities(typst_output)
     
     # Clean up output
     # Remove excessive blank lines
