@@ -317,8 +317,8 @@ class TypstRenderer:
         content = self.render_children(node)
         if not content:
             return ''
-        # Use #emph[] instead of _..._ to avoid creating problematic patterns
-        # when adjacent to underscores
+        # Use #emph[] instead of _..._ to avoid creating block comment patterns
+        # when adjacent to slashes, asterisks, or underscores (similar to #strong[])
         return f"#emph[{content}]"
     
     def render_underline(self, node: HTMLNode, quill_styles: Dict, inline_styles: Dict) -> str:

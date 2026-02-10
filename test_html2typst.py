@@ -349,8 +349,7 @@ class TestTypstSafety(unittest.TestCase):
         html = "<p><strong>Bold</strong> and <em>italic</em></p>"
         result = translate_html_to_typst(html)
         
-        # With function-based syntax, we check for balanced brackets
-        # Count opening and closing square brackets in formatting functions
+        # With function-based syntax, verify proper formatting is used
         self.assertIn("#strong[Bold]", result)
         self.assertIn("#emph[italic]", result)
     
