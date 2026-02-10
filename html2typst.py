@@ -308,14 +308,18 @@ class TypstRenderer:
         content = self.render_children(node)
         if not content:
             return ''
-        return f"*{content}*"
+        # Use #strong[] instead of *...* to avoid creating block comment patterns
+        # when adjacent to slashes or asterisks (e.g., *text*/*text* creates */)
+        return f"#strong[{content}]"
     
     def render_em(self, node: HTMLNode, quill_styles: Dict, inline_styles: Dict) -> str:
         """Render italic text."""
         content = self.render_children(node)
         if not content:
             return ''
-        return f"_{content}_"
+        # Use #emph[] instead of _..._ to avoid creating problematic patterns
+        # when adjacent to underscores
+        return f"#emph[{content}]"
     
     def render_underline(self, node: HTMLNode, quill_styles: Dict, inline_styles: Dict) -> str:
         """Render underlined text."""

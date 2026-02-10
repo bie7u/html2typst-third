@@ -21,25 +21,25 @@ class TestBasicElements(unittest.TestCase):
         """Test bold text."""
         html = "<p><strong>Bold text</strong></p>"
         result = translate_html_to_typst(html)
-        self.assertIn("*Bold text*", result)
+        self.assertIn("#strong[Bold text]", result)
     
     def test_italic_text(self):
         """Test italic text."""
         html = "<p><em>Italic text</em></p>"
         result = translate_html_to_typst(html)
-        self.assertIn("_Italic text_", result)
+        self.assertIn("#emph[Italic text]", result)
     
     def test_bold_tag(self):
         """Test <b> tag."""
         html = "<p><b>Bold</b></p>"
         result = translate_html_to_typst(html)
-        self.assertIn("*Bold*", result)
+        self.assertIn("#strong[Bold]", result)
     
     def test_italic_tag(self):
         """Test <i> tag."""
         html = "<p><i>Italic</i></p>"
         result = translate_html_to_typst(html)
-        self.assertIn("_Italic_", result)
+        self.assertIn("#emph[Italic]", result)
     
     def test_underline(self):
         """Test underline."""
@@ -83,7 +83,7 @@ class TestLists(unittest.TestCase):
         """Test list with formatted content."""
         html = "<ul><li><strong>Bold item</strong></li></ul>"
         result = translate_html_to_typst(html)
-        self.assertIn("*Bold item*", result)
+        self.assertIn("#strong[Bold item]", result)
 
 
 class TestQuillSpecific(unittest.TestCase):
@@ -131,9 +131,28 @@ class TestEdgeCases(unittest.TestCase):
         # Must preserve the text
         self.assertIn("Tekst", result)
         # Should have bold formatting
-        self.assertIn("*Tekst*", result)
+        self.assertIn("#strong[Tekst]", result)
         # Should be a list item - when <li> has no parent list, defaults to unordered
-        self.assertIn("- *Tekst*", result)
+        self.assertIn("- #strong[Tekst]", result)
+    
+    def test_block_comment_pattern_avoidance(self):
+        """Test that adjacent bold/italic elements don't create block comment patterns."""
+        # This was causing "unexpected end of block comment" error
+        html = '<p><strong>Text1</strong>/<strong>Text2</strong></p>'
+        result = translate_html_to_typst(html)
+        
+        # Must preserve all text
+        self.assertIn("Text1", result)
+        self.assertIn("Text2", result)
+        self.assertIn("/", result)
+        
+        # Should use #strong[] syntax, not *...* which creates */ and /* patterns
+        self.assertIn("#strong[Text1]", result)
+        self.assertIn("#strong[Text2]", result)
+        
+        # Should not contain the problematic */ or /* patterns from old syntax
+        self.assertNotIn("*/", result)
+        self.assertNotIn("/*", result)
     
     def test_nested_formatting(self):
         """Test nested formatting tags."""
@@ -274,7 +293,7 @@ class TestDebugMode(unittest.TestCase):
             result = translate_html_to_typst(html, debug=True, debug_log_path=log_path)
             
             # Output should still be clean
-            self.assertIn("*Test*", result)
+            self.assertIn("#strong[Test]", result)
             self.assertNotIn("DEBUG", result)
             self.assertNotIn("INFO", result)
             
@@ -330,9 +349,10 @@ class TestTypstSafety(unittest.TestCase):
         html = "<p><strong>Bold</strong> and <em>italic</em></p>"
         result = translate_html_to_typst(html)
         
-        # Count opening and closing markers
-        self.assertEqual(result.count('*') % 2, 0, "Asterisks should be balanced")
-        self.assertEqual(result.count('_') % 2, 0, "Underscores should be balanced")
+        # With function-based syntax, we check for balanced brackets
+        # Count opening and closing square brackets in formatting functions
+        self.assertIn("#strong[Bold]", result)
+        self.assertIn("#emph[italic]", result)
     
     def test_complex_nesting(self):
         """Test complex nesting doesn't break syntax."""
@@ -406,8 +426,8 @@ class TestRealWorldQuill(unittest.TestCase):
         result = translate_html_to_typst(html)
         
         self.assertIn("Normal text", result)
-        self.assertIn("*Bold text*", result)
-        self.assertIn("_Italic text_", result)
+        self.assertIn("#strong[Bold text]", result)
+        self.assertIn("#emph[Italic text]", result)
         self.assertIn("#underline[Underlined text]", result)
     
     def test_quill_lists(self):
