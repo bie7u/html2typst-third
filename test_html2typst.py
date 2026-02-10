@@ -519,9 +519,14 @@ class TestTypstSpecialCharacters(unittest.TestCase):
         
         # Text must be preserved
         self.assertIn("text in parentheses", result)
-        # Should not create bare parentheses that Typst might interpret as function call
-        # Empty strong should either be omitted or rendered safely
-        # The key is that the output should be valid Typst
+        self.assertIn("(", result)
+        self.assertIn(")", result)
+        
+        # Should not create problematic patterns
+        # Empty strong returns empty string, so we should just see the plain text
+        # The parentheses should appear in a text context, not as a function call
+        self.assertNotIn("#strong[(", result)  # Empty strong shouldn't wrap parentheses
+        self.assertNotIn("**(", result)  # Old-style markdown syntax shouldn't appear
     
     def test_empty_tags_sequence(self):
         """Test sequence of empty tags."""
@@ -530,7 +535,11 @@ class TestTypstSpecialCharacters(unittest.TestCase):
         
         # The actual text must be preserved
         self.assertIn("actual text", result)
-        # Empty tags should not produce invalid Typst syntax
+        
+        # Empty tags should not produce consecutive formatting markers
+        self.assertNotIn("##", result)  # No consecutive # symbols
+        self.assertNotIn("[][]", result)  # No consecutive empty brackets
+        self.assertNotIn("#strong[]#strong[]", result)  # No consecutive empty strong calls
     
     def test_brackets_in_text(self):
         """Test square brackets in text content."""
