@@ -209,10 +209,36 @@ class TypstRenderer:
         """Render text node with proper escaping for Typst."""
         text = node.text
         
-        # Escape special Typst characters
-        # We need to be careful with *, _, `, #, @, etc.
-        # For now, basic escaping - text content should generally be safe
-        # unless it contains Typst special sequences
+        # Escape special Typst characters to prevent syntax errors
+        # Reference: https://typst.app/docs/reference/syntax/
+        
+        # Characters that need escaping in Typst:
+        # \ - escape character (escape first to avoid double-escaping)
+        # # - function/directive marker
+        # @ - label marker  
+        # $ - math mode delimiter
+        # * - can be part of emphasis syntax
+        # _ - can be part of emphasis syntax
+        # ` - code/raw text delimiter
+        # [ ] - content blocks
+        # Polish quotes and similar special chars should be converted to ASCII equivalents
+        
+        # First escape backslash
+        text = text.replace('\\', '\\\\')
+        
+        # Escape Typst special characters
+        text = text.replace('#', '\\#')
+        text = text.replace('@', '\\@')
+        text = text.replace('$', '\\$')
+        
+        # Replace Polish quotation marks with ASCII equivalents
+        # „ (U+201E) -> "
+        # " (U+201D) -> "
+        text = text.replace('\u201e', '"')  # „ -> "
+        text = text.replace('\u201d', '"')  # " -> "
+        text = text.replace('\u201c', '"')  # " -> " (English opening)
+        text = text.replace('\u2018', "'")  # ' -> ' (single opening)
+        text = text.replace('\u2019', "'")  # ' -> ' (single closing)
         
         return text
     

@@ -460,5 +460,88 @@ class TestRealWorldQuill(unittest.TestCase):
         self.assertIn("Right aligned", result)
 
 
+class TestTypstSpecialCharacters(unittest.TestCase):
+    """Test handling of Typst special characters."""
+    
+    def test_polish_quotation_marks(self):
+        """Test Polish quotation marks are escaped."""
+        # Using Unicode escape sequences to avoid encoding issues
+        html = '<p>dalej \u201eWspólnota\u201d postanawiaj\u0105</p>'
+        result = translate_html_to_typst(html)
+        
+        # Text must be preserved
+        self.assertIn("dalej", result)
+        self.assertIn("Wspólnota", result)
+        
+        # Should not contain raw Polish quotes that would break Typst
+        # The quotes should be escaped or converted to safe alternatives
+        self.assertNotIn("\u201e", result)  # Raw opening quote
+        self.assertNotIn("\u201d", result)  # Raw closing quote
+    
+    def test_hash_character_escaped(self):
+        """Test that # character is escaped."""
+        html = '<p>Use #hashtag in text</p>'
+        result = translate_html_to_typst(html)
+        
+        # Text must be preserved
+        self.assertIn("hashtag", result)
+        # Hash should be escaped to avoid Typst function calls
+        self.assertIn("\\#", result)
+    
+    def test_at_character_escaped(self):
+        """Test that @ character is escaped."""
+        html = '<p>Email: user@example.com</p>'
+        result = translate_html_to_typst(html)
+        
+        # Text must be preserved
+        self.assertIn("user", result)
+        self.assertIn("example.com", result)
+        # @ should be escaped to avoid Typst labels
+        self.assertIn("\\@", result)
+    
+    def test_parentheses_in_text(self):
+        """Test that parentheses in plain text don't break Typst."""
+        html = '<p>(tekst jednolity: Dz. U. z 2018 r. poz. 716)</p>'
+        result = translate_html_to_typst(html)
+        
+        # All text must be preserved
+        self.assertIn("tekst jednolity", result)
+        self.assertIn("Dz. U.", result)
+        self.assertIn("poz. 716", result)
+        # Parentheses should be present (they're safe in plain text context)
+        self.assertIn("(", result)
+        self.assertIn(")", result)
+    
+    def test_empty_strong_before_parentheses(self):
+        """Test empty <strong> tag before parentheses text."""
+        html = '<p><strong></strong>(text in parentheses)</p>'
+        result = translate_html_to_typst(html)
+        
+        # Text must be preserved
+        self.assertIn("text in parentheses", result)
+        # Should not create bare parentheses that Typst might interpret as function call
+        # Empty strong should either be omitted or rendered safely
+        # The key is that the output should be valid Typst
+    
+    def test_empty_tags_sequence(self):
+        """Test sequence of empty tags."""
+        html = '<p><strong></strong><span style="color: black;"></span><strong></strong>actual text</p>'
+        result = translate_html_to_typst(html)
+        
+        # The actual text must be preserved
+        self.assertIn("actual text", result)
+        # Empty tags should not produce invalid Typst syntax
+    
+    def test_brackets_in_text(self):
+        """Test square brackets in text content."""
+        html = '<p>Text with [brackets] inside</p>'
+        result = translate_html_to_typst(html)
+        
+        # Text must be preserved
+        self.assertIn("Text with", result)
+        self.assertIn("brackets", result)
+        self.assertIn("inside", result)
+
+
 if __name__ == '__main__':
     unittest.main()
