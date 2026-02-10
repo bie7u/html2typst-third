@@ -10,6 +10,24 @@ from typing import Optional, List, Dict, Any
 from io import StringIO
 
 
+# Typst special characters that need escaping
+TYPST_ESCAPE_CHARS = {
+    '\\': '\\\\',  # Backslash must be escaped first
+    '#': '\\#',    # Function/directive marker
+    '@': '\\@',    # Label marker
+    '$': '\\$',    # Math mode delimiter
+}
+
+# Unicode quote characters to replace with ASCII equivalents
+UNICODE_QUOTE_REPLACEMENTS = {
+    '\u201e': '"',  # „ (Polish opening quote) -> "
+    '\u201d': '"',  # " (closing quote) -> "
+    '\u201c': '"',  # " (English opening quote) -> "
+    '\u2018': "'",  # ' (single opening quote) -> '
+    '\u2019': "'",  # ' (single closing quote) -> '
+}
+
+
 class RenderContext:
     """Context for tracking state during HTML rendering."""
     
@@ -209,10 +227,16 @@ class TypstRenderer:
         """Render text node with proper escaping for Typst."""
         text = node.text
         
-        # Escape special Typst characters
-        # We need to be careful with *, _, `, #, @, etc.
-        # For now, basic escaping - text content should generally be safe
-        # unless it contains Typst special sequences
+        # Escape special Typst characters to prevent syntax errors
+        # Reference: https://typst.app/docs/reference/syntax/
+        
+        # Apply Typst character escaping (backslash must be first to avoid double-escaping)
+        for char, replacement in TYPST_ESCAPE_CHARS.items():
+            text = text.replace(char, replacement)
+        
+        # Replace Unicode quotes with ASCII equivalents
+        for unicode_char, ascii_char in UNICODE_QUOTE_REPLACEMENTS.items():
+            text = text.replace(unicode_char, ascii_char)
         
         return text
     
