@@ -222,10 +222,11 @@ class TypstRenderer:
         # Match ] followed by word character (letter, digit, underscore)
         text = re.sub(r'\](\w)', r'] \1', text)
         
-        # Pattern 4: Before # preceded by alphanumeric text
-        # This prevents text running into command
-        # Match word character followed by #
-        text = re.sub(r'(\w)#', r'\1 #', text)
+        # Pattern 4: Before # preceded by alphanumeric text and followed by a word character
+        # This prevents text running into command (e.g., text#strong[...])
+        # Only matches # that starts a command (followed by word char like 's' in #strong)
+        # Won't match standalone # or escaped \#
+        text = re.sub(r'(\w)(#\w)', r'\1 \2', text)
         
         return text
     
