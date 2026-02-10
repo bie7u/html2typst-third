@@ -206,15 +206,14 @@ class TypstRenderer:
         - #command[...](  -> #command[...] (  (prevents interpretation as function call)
         - #command[...]#  -> #command[...] # (adds space between adjacent commands)
         """
-        import re
-        
         # Pattern 1: After ] followed immediately by ( [ or {
         # This prevents #strong[text]( from being interpreted as a function call
-        text = re.sub(r'\]([(\[{])', r'] \1', text)
+        # Note: We match literal characters in the character class
+        text = re.sub(r'\]([({\[])', r'] \1', text)
         
         # Pattern 2: After ] followed immediately by #
         # This prevents adjacent commands from running together
-        text = re.sub(r'\](#)', r'] #', text)
+        text = re.sub(r'\]#', r'] #', text)
         
         return text
     

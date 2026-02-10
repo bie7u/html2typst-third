@@ -1,7 +1,10 @@
 """Test cases for the specific error patterns from the issue."""
 import unittest
+import os
 import sys
-sys.path.insert(0, '/home/runner/work/html2typst-third/html2typst-third')
+
+# Add parent directory to path for imports
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from html2typst import translate_html_to_typst
 
