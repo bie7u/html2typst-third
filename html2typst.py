@@ -205,6 +205,8 @@ class TypstRenderer:
         Specifically handles:
         - #command[...](  -> #command[...] (  (prevents interpretation as function call)
         - #command[...]#  -> #command[...] # (adds space between adjacent commands)
+        - #command[...]text -> #command[...] text (prevents command running into text)
+        - text#command[...] -> text #command[...] (prevents text running into command)
         """
         # Pattern 1: After ] followed immediately by ( [ or {
         # This prevents #strong[text]( from being interpreted as a function call
@@ -214,6 +216,17 @@ class TypstRenderer:
         # Pattern 2: After ] followed immediately by #
         # This prevents adjacent commands from running together
         text = re.sub(r'\]#', r'] #', text)
+        
+        # Pattern 3: After ] followed immediately by alphanumeric text
+        # This prevents command output running into following text
+        # Match ] followed by word character (letter, digit, underscore)
+        text = re.sub(r'\](\w)', r'] \1', text)
+        
+        # Pattern 4: Before # preceded by alphanumeric text and followed by a word character
+        # This prevents text running into command (e.g., text#strong[...])
+        # Only matches # that starts a command (followed by word char like 's' in #strong)
+        # Won't match standalone # or escaped \#
+        text = re.sub(r'(\w)(#\w)', r'\1 \2', text)
         
         return text
     
